@@ -16,6 +16,8 @@ PROFILE_URL = "https://raw.githubusercontent.com/Humberto-Hechert/telegram-recru
 GEMINI_MODEL = "gemini-3.5-flash-lite"
 GROQ_MODEL = "openai/gpt-oss-120b"
 DEDUP_DAYS = "30"
+OPENAI_MODEL = "gpt-5-nano"
+OPENAI_MONTHLY_BUDGET_USD = "2"
 
 # Segredos (NÃO coloque aqui; use `npx wrangler secret put NOME`):
 #   TELEGRAM_BOT_TOKEN, TELEGRAM_WEBHOOK_SECRET, GEMINI_API_KEY, GROQ_API_KEY
