@@ -13,7 +13,7 @@ id = "1617f7ff2b63404896563ade89ff43c5"
 ALLOWED_CHAT_ID = "1738807203"
 # Link "raw" do perfil.md no seu repositório público.
 PROFILE_URL = "https://raw.githubusercontent.com/Humberto-Hechert/telegram-recruiter/main/perfil.md"
-GEMINI_MODEL = "gemini-2.5-flash-lite"
+GEMINI_MODEL = "gemini-3.5-flash-lite"
 GROQ_MODEL = "openai/gpt-oss-120b"
 DEDUP_DAYS = "30"
 

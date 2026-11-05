@@ -27,7 +27,7 @@ export function loadEnv(env = process.env) {
     cfNamespaceId: env.CF_KV_NAMESPACE_ID,
     cfApiToken: env.CF_API_TOKEN,
     geminiKey: env.GEMINI_API_KEY,
-    geminiModel: env.GEMINI_MODEL || 'gemini-2.5-flash-lite',
+    geminiModel: env.GEMINI_MODEL || 'gemini-3.5-flash-lite',
     groqKey: env.GROQ_API_KEY,
     groqModel: env.GROQ_MODEL || 'openai/gpt-oss-120b',
     apifyToken: env.APIFY_TOKEN,

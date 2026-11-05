@@ -133,7 +133,7 @@ async function complete(env, system, user) {
   const errors = [];
   if (env.GEMINI_API_KEY) {
     try {
-      const model = env.GEMINI_MODEL || 'gemini-2.5-flash-lite';
+      const model = env.GEMINI_MODEL || 'gemini-3.5-flash-lite';
       const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-goog-api-key': env.GEMINI_API_KEY },
