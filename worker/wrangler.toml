@@ -6,13 +6,13 @@ compatibility_date = "2025-09-01"
 # Troque o id abaixo pelo id do namespace que você criou (passo 4 da documentação).
 [[kv_namespaces]]
 binding = "JOBS"
-id = "COLE_AQUI_O_ID_DO_NAMESPACE"
+id = "1617f7ff2b63404896563ade89ff43c5"
 
 [vars]
 # Seu chat ID do Telegram. Deixe vazio na primeira publicação para descobrir com /start.
-ALLOWED_CHAT_ID = ""
+ALLOWED_CHAT_ID = "1738807203"
 # Link "raw" do perfil.md no seu repositório público.
-PROFILE_URL = "https://raw.githubusercontent.com/SEU_USUARIO/telegram-recruiter/main/perfil.md"
+PROFILE_URL = "https://raw.githubusercontent.com/Humberto-Hechert/telegram-recruiter/main/perfil.md"
 GEMINI_MODEL = "gemini-2.5-flash-lite"
 GROQ_MODEL = "openai/gpt-oss-120b"
 DEDUP_DAYS = "30"

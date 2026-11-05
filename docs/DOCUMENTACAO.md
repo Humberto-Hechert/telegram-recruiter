@@ -53,7 +53,7 @@ flowchart TD
    ```bash
    cd worker && npx wrangler login && npx wrangler deploy
    npx wrangler secret put TELEGRAM_BOT_TOKEN
-   npx wrangler secret put TELEGRAM_WEBHOOK_SECRET   # qualquer texto aleatório
+   npx wrangler secret put TELEGRAM_WEBHOOK_SECRET   
    npx wrangler secret put GEMINI_API_KEY
    npx wrangler secret put GROQ_API_KEY
    curl "https://api.telegram.org/bot<TOKEN>/setWebhook" -d "url=<URL do Worker>" \
