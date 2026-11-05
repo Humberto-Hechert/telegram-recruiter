@@ -1,0 +1,16 @@
+{
+  "name": "telegram-recruiter",
+  "version": "1.0.0",
+  "description": "Busca vagas novas no LinkedIn, avalia a compatibilidade com o seu perfil usando LLM e avisa no Telegram.",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "scan": "node src/scan.js",
+    "digest": "node src/digest.js",
+    "dry-run": "DRY_RUN=1 node src/scan.js",
+    "test": "node --test \"test/*.test.js\""
+  }
+}

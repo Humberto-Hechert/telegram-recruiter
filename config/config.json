@@ -1,0 +1,67 @@
+{
+  "search": {
+    "keywordGroups": [
+      {
+        "label": "engenharia (en)",
+        "keywords": "\"Software Engineer\" OR \"Backend Engineer\" OR \"Back-end Engineer\" OR \"Node.js Developer\""
+      },
+      {
+        "label": "ia (en)",
+        "keywords": "\"AI Engineer\" OR \"LLM Engineer\" OR \"AI Developer\" OR \"Generative AI\" OR \"AI Agents\""
+      },
+      {
+        "label": "pt-br",
+        "keywords": "Desenvolvedor OR \"Desenvolvedor backend\" OR \"Engenheiro de IA\" OR \"Desenvolvedor IA\""
+      }
+    ],
+    "locations": [
+      { "label": "Brasil · remoto", "location": "Brazil", "geoId": "106057199", "workplaceTypes": ["2"] },
+      { "label": "América Latina · remoto", "location": "Latin America", "workplaceTypes": ["2"] },
+      { "label": "Worldwide · remoto", "location": "Worldwide", "geoId": "92000000", "workplaceTypes": ["2"] },
+      { "label": "São Paulo · híbrido", "location": "São Paulo, São Paulo, Brazil", "workplaceTypes": ["3"] }
+    ],
+    "experienceLevels": ["3", "4"],
+    "windowSeconds": 3600,
+    "firstRunWindowSeconds": 86400,
+    "maxPagesPerQuery": 3,
+    "requestDelayMs": [2000, 4500]
+  },
+  "filters": {
+    "excludedCompanies": ["BairesDev"],
+    "excludedTitlePatterns": [
+      "\\bj[uú]nior\\b", "\\bjr\\.?(\\b|$)", "est[aá]gi", "\\bintern(ship)?\\b", "\\btrainee\\b",
+      "\\bstaff\\b", "\\bprincipal\\b", "\\bdirector\\b", "\\bdiretor", "\\bhead of\\b", "\\bvp\\b",
+      "\\bsales\\b", "\\bvendas\\b", "account executive", "\\bsdr\\b", "\\bbdr\\b",
+      "annotat", "ai trainer", "data label", "\\btutor\\b", "\\bwriter\\b", "\\bprofessor\\b"
+    ]
+  },
+  "scoring": {
+    "weights": { "stack": 0.40, "tipo_trabalho": 0.25, "experiencia": 0.20, "outros": 0.15 },
+    "sendThreshold": 70,
+    "digestThreshold": 60
+  },
+  "salary": {
+    "floorsBRLMonthly": { "CLT": 10000, "PJ": 13000, "foreign": 13000 },
+    "hoursPerMonth": 168,
+    "fallbackRatesToBRL": { "USD": 5.4, "EUR": 5.9, "GBP": 6.9, "CAD": 3.9 }
+  },
+  "llm": {
+    "maxEvaluationsPerRun": 20,
+    "geminiMinIntervalMs": 6500,
+    "groqMinIntervalMs": 20000,
+    "maxDescriptionChars": 6000
+  },
+  "storage": {
+    "dedupDays": 30
+  },
+  "apify": {
+    "actorId": "curious_coder~linkedin-jobs-scraper",
+    "intervalMinutes": 120,
+    "windowSeconds": 10800,
+    "maxPerSearch": 25
+  },
+  "alerts": {
+    "errorCooldownHours": 6
+  },
+  "timezone": "America/Sao_Paulo"
+}

@@ -1,0 +1,21 @@
+name = "telegram-recruiter"
+main = "src/index.js"
+compatibility_date = "2025-09-01"
+
+# Mesmo namespace KV que o robô do GitHub Actions usa (CF_KV_NAMESPACE_ID).
+# Troque o id abaixo pelo id do namespace que você criou (passo 4 da documentação).
+[[kv_namespaces]]
+binding = "JOBS"
+id = "COLE_AQUI_O_ID_DO_NAMESPACE"
+
+[vars]
+# Seu chat ID do Telegram. Deixe vazio na primeira publicação para descobrir com /start.
+ALLOWED_CHAT_ID = ""
+# Link "raw" do perfil.md no seu repositório público.
+PROFILE_URL = "https://raw.githubusercontent.com/SEU_USUARIO/telegram-recruiter/main/perfil.md"
+GEMINI_MODEL = "gemini-2.5-flash-lite"
+GROQ_MODEL = "openai/gpt-oss-120b"
+DEDUP_DAYS = "30"
+
+# Segredos (NÃO coloque aqui; use `npx wrangler secret put NOME`):
+#   TELEGRAM_BOT_TOKEN, TELEGRAM_WEBHOOK_SECRET, GEMINI_API_KEY, GROQ_API_KEY
