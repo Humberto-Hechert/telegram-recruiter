@@ -1,0 +1,36 @@
+name: Digest diário
+
+on:
+  # Disparo principal: cron-job.org às 18:00 (America/Sao_Paulo).
+  workflow_dispatch:
+  # Reserva: 21:00 UTC = 18:00 em São Paulo (o Brasil não tem horário de verão desde 2019).
+  # Se os dois dispararem, o segundo não reenvia: o digest marca no KV que já saiu naquele dia.
+  schedule:
+    - cron: '0 21 * * *'
+
+concurrency:
+  group: digest
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  digest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Enviar digest das vagas "quase"
+        run: node src/digest.js
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+          CF_KV_NAMESPACE_ID: ${{ secrets.CF_KV_NAMESPACE_ID }}
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
