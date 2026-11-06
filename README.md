@@ -29,6 +29,8 @@ Robô que procura vagas novas no LinkedIn a cada 15 minutos, usa IA para medir o
 
 Tudo está em **[docs/DOCUMENTACAO.md](docs/DOCUMENTACAO.md)**: ferramentas e o papel de cada uma, diagramas, configuração passo a passo, referência de configurações, limites e troubleshooting.
 
+Para operar o robô (onde fica cada configuração, erros por serviço, troca de chaves, como pausar e como desligar), veja **[docs/INFRAESTRUTURA.md](docs/INFRAESTRUTURA.md)**.
+
 ## Comandos
 
 ```bash

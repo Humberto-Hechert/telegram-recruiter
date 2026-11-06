@@ -2,6 +2,8 @@
 
 A cada 15 minutos o robô busca vagas novas no LinkedIn, pede para uma IA comparar cada uma com o meu `perfil.md` e manda no Telegram as que passam de 70% de compatibilidade, com título, resumo, remuneração, link e um botão que gera a carta de apresentação. As vagas entre 60% e 69% vão para um resumo diário às 18h. O custo mensal é R$ 0.
 
+> Para operar o robô no dia a dia (erros por serviço, troca de chaves, pausar e desligar), veja [INFRAESTRUTURA.md](INFRAESTRUTURA.md).
+
 ## Sumário
 
 1. [Ferramentas](#1-ferramentas)
@@ -498,12 +500,12 @@ Por segurança, o Worker só aceita requisições com o segredo do webhook e só
 
 ### Etapa 8 — Estado e memória
 
-O Cloudflare Workers KV guarda as vagas vistas (com expiração de 30 dias), as vagas do digest, o modo atual (LinkedIn ou Apify) e o gasto do mês com a OpenAI. O robô acessa o KV pela API REST, porque roda no GitHub, e o Worker acessa pelo binding nativo. O limite grátis que mais importa é o de 1.000 gravações por dia. A primeira versão gravava uma vez por vaga avaliada e estourou o limite no segundo dia (veja a etapa 10). Hoje, as vagas vistas ficam numa lista por dia (`vistas:<data>`), gravada uma vez por execução, e só as vagas enviadas ganham registro próprio, que o botão de carta usa.
+O Cloudflare Workers KV guarda as vagas vistas (com expiração de 30 dias), as vagas do digest, o modo atual (LinkedIn ou Apify) e o gasto do mês com a OpenAI. O robô acessa o KV pela API REST, porque roda no GitHub, e o Worker acessa pelo binding nativo. O limite grátis que mais importa é o de 1.000 gravações por dia. A primeira versão gravava uma vez por vaga avaliada e chegou a 90% do limite diário já no segundo dia (veja a etapa 10). Hoje, as vagas vistas ficam numa lista por dia (`vistas:<data>`), gravada uma vez por execução, e só as vagas enviadas ganham registro próprio, que o botão de carta usa.
 
 ### Etapa 9 — Testes
 
 São 30 testes com `node:test`, sem nenhuma dependência npm e sem rede:
-- **Parser:** usa fixtures do HTML real.
+- **Parser:** usa fixtures que reproduzem o HTML do LinkedIn.
 - **Régua:** pesos, eliminatórios e classificação.
 - **Salário:** conversão de moeda, piso e formatação.
 - **Deduplicação.**
@@ -521,7 +523,7 @@ Antes de ir ao ar, também testei o Worker com o Telegram, o KV e o LLM simulado
 | Modelo do Gemini descontinuado | `404: no longer available to new users` na primeira execução | Modelo configurável por variável, sem mexer no código; modelo que responde 404 é desligado pelo resto da execução |
 | Gemini sobrecarregado | `503 high demand` em várias vagas seguidas | Tentativa de novo com espera crescente e lista de modelos |
 | Groq estourando o limite | `429` ao assumir muitas vagas seguidas | Tentativa de novo respeitando o tempo de espera pedido pela API, e a OpenAI com teto como última camada |
-| Limite do KV estourado | E-mail da Cloudflare: 90% das 1.000 gravações diárias usadas no segundo dia | Uma gravação por vaga virou uma por execução (lista diária de vistas); também cortei termos genéricos e ampliei o pré-filtro |
+| KV perto do limite diário | E-mail da Cloudflare: 90% das 1.000 gravações diárias usadas no segundo dia | Uma gravação por vaga virou uma por execução (lista diária de vistas); também cortei termos genéricos e ampliei o pré-filtro |
 | Workflows invisíveis no GitHub | A aba *Actions* mostrava só "Get started" | A pasta `.github` é oculta no Mac e não tinha subido |
 | Filtros ignorados pelo LinkedIn | Vagas fora do recorte chegando à avaliação | O LLM confere de novo local e modelo de trabalho e elimina o que não serve |
 
