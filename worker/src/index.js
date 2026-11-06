@@ -49,9 +49,10 @@ async function handleMessage(message, env) {
     const initialized = await env.JOBS.get('state:initialized', 'json');
     const source = !mode || mode.source === 'guest' ? 'LinkedIn direto (a cada 15 min)' : 'Apify (a cada 2h, LinkedIn bloqueado)';
     const since = mode?.since ? ` desde ${new Date(mode.since).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })}` : '';
+    const spend = (await env.JOBS.get(`state:openai:${monthKey()}`, 'json')) || { spentUSD: 0, calls: 0 };
     return tg(env, 'sendMessage', {
       chat_id: chatId,
-      text: `Fonte atual: ${source}${since}\nPrimeira execução: ${initialized ? new Date(initialized).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' }) : 'ainda não rodou'}`,
+      text: `Fonte atual: ${source}${since}\nPrimeira execução: ${initialized ? new Date(initialized).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' }) : 'ainda não rodou'}\nOpenAI neste mês: US$ ${spend.spentUSD.toFixed(4)} de US$ ${budgetCap(env).toFixed(2)} (${spend.calls} chamadas)`,
     });
   }
 }
@@ -172,7 +173,55 @@ async function complete(env, system, user) {
       errors.push(`Groq: ${err.message}`);
     }
   }
+  if (env.OPENAI_API_KEY) {
+    try {
+      return await openaiWithBudget(env, system, user);
+    } catch (err) {
+      errors.push(`OpenAI: ${err.message}`);
+    }
+  }
   throw new Error(errors.join(' | ') || 'nenhuma chave de LLM configurada');
+}
+
+// ---- OpenAI (pago, último recurso) com o MESMO teto mensal do robô (chave state:openai:<AAAA-MM> no KV).
+// Mantenha os preços iguais a config/config.json → openai.pricePerMillion.
+const OPENAI_PRICES = { input: 0.05, cachedInput: 0.005, output: 0.40 }; // gpt-5-nano, US$ por 1M tokens
+const OPENAI_MAX_COMPLETION_TOKENS = 1500;
+
+function monthKey() {
+  const parts = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo', year: 'numeric', month: '2-digit' }).formatToParts(new Date());
+  return `${parts.find((p) => p.type === 'year').value}-${parts.find((p) => p.type === 'month').value}`;
+}
+
+const budgetCap = (env) => Number(env.OPENAI_MONTHLY_BUDGET_USD || 2);
+
+async function openaiWithBudget(env, system, user) {
+  const key = `state:openai:${monthKey()}`;
+  const state = (await env.JOBS.get(key, 'json')) || { spentUSD: 0, calls: 0 };
+  const worstCase = (Math.ceil((system.length + user.length) / 3) * OPENAI_PRICES.input + OPENAI_MAX_COMPLETION_TOKENS * OPENAI_PRICES.output) / 1e6;
+  if (state.spentUSD + worstCase > budgetCap(env)) throw new Error('teto mensal de gastos atingido');
+
+  const res = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${env.OPENAI_API_KEY}` },
+    body: JSON.stringify({
+      model: env.OPENAI_MODEL || 'gpt-5-nano',
+      messages: [{ role: 'system', content: system }, { role: 'user', content: user }],
+      max_completion_tokens: OPENAI_MAX_COMPLETION_TOKENS,
+      reasoning_effort: 'minimal',
+    }),
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const data = await res.json();
+  const u = data.usage || {};
+  const cached = u.prompt_tokens_details?.cached_tokens || 0;
+  const cost = u.prompt_tokens != null
+    ? (((u.prompt_tokens - cached) * OPENAI_PRICES.input) + cached * OPENAI_PRICES.cachedInput + (u.completion_tokens || 0) * OPENAI_PRICES.output) / 1e6
+    : worstCase;
+  await env.JOBS.put(key, JSON.stringify({ spentUSD: state.spentUSD + cost, calls: state.calls + 1 }), { expirationTtl: 40 * 86400 });
+  const text = data.choices?.[0]?.message?.content;
+  if (!text) throw new Error('resposta vazia');
+  return text;
 }
 
 async function tg(env, method, payload) {
