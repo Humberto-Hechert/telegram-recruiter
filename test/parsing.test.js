@@ -41,8 +41,36 @@ test('monta a URL da busca guest com os filtros', () => {
   assert.equal(url.searchParams.get('keywords'), '"AI Engineer"');
 });
 
-test('o config gera 3 grupos × 4 localizações = 12 buscas', () => {
-  assert.equal(buildQueries(loadConfig().search).length, 12);
+test('o config gera 11 buscas: EUA só com os termos em inglês e 1 página', () => {
+  const queries = buildQueries(loadConfig().search);
+  assert.equal(queries.length, 11);
+  const us = queries.filter((q) => q.location === 'United States');
+  assert.deepEqual(us.map((q) => q.label), ['engenharia (en) @ EUA · remoto', 'ia (en) @ EUA · remoto']);
+  assert.ok(us.every((q) => q.maxPages === 1));
+  const sp = queries.find((q) => q.location.startsWith('São Paulo'));
+  assert.deepEqual(sp.workplaceTypes, ['1', '2', '3']);
+  assert.ok(!queries.some((q) => /Worldwide|Latin America/.test(q.location)));
+});
+
+test('termos em português não têm mais "Desenvolvedor" sozinho', () => {
+  const pt = loadConfig().search.keywordGroups.find((g) => g.label === 'pt-br').keywords;
+  const terms = pt.split(' OR ').map((t) => t.replace(/"/g, ''));
+  assert.ok(!terms.includes('Desenvolvedor'));
+  assert.ok(terms.includes('Desenvolvedor backend') && terms.includes('Desenvolvedor Node.js') && terms.includes('Desenvolvedor IA'));
+});
+
+test('maxPages da localização limita a paginação', async () => {
+  const search = {
+    keywordGroups: [{ label: 'g', keywords: 'x' }],
+    locations: [{ label: 'l', location: 'United States', workplaceTypes: ['2'], maxPages: 1 }],
+    experienceLevels: [], maxPagesPerQuery: 3, requestDelayMs: [0, 0],
+  };
+  const tenCards = Array.from({ length: 10 }, (_, i) =>
+    `<li><div data-entity-urn="urn:li:jobPosting:${4000000 + i}"><h3 class="base-search-card__title">Job ${i}</h3><h4 class="base-search-card__subtitle">Co</h4></div></li>`).join('');
+  let calls = 0;
+  const jobs = await searchAll(search, 3600, { fetchImpl: async () => { calls++; return new Response(tenCards); }, delay: async () => {}, log: () => {} });
+  assert.equal(calls, 1);
+  assert.equal(jobs.length, 10);
 });
 
 test('bloqueio no meio da busca devolve o que já foi coletado', async () => {

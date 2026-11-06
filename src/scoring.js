@@ -27,8 +27,8 @@ ${truncate(job.description || '(sem descrição)', maxDescriptionChars)}
 ## COMO AVALIAR
 
 1) ELIMINATÓRIOS — se QUALQUER um valer, "eliminada": true:
-- Exige residência, cidadania, visto ou autorização de trabalho em país que não seja o Brasil (ex.: "must be based in the US", "US only", "EU work authorization"). Vagas "remote LATAM", "remote Brazil", "worldwide/anywhere" ou de empresa estrangeira contratando no Brasil NÃO são eliminadas por isso.
-- Trabalho presencial, ou híbrido fora da Grande São Paulo.
+- Exige residência, cidadania, visto ou autorização de trabalho em país que não seja o Brasil (ex.: "must be based in the US", "US only", "must reside in Portugal", "EU work authorization"). O candidato mora em São Paulo: vagas remotas de empresas dos EUA ou de Portugal só passam se aceitarem profissional morando no Brasil (contractor/PJ internacional, "remote LATAM", "worldwide/anywhere"). Vagas "remote Brazil" NÃO são eliminadas por isso.
+- Trabalho presencial ou híbrido FORA da Grande São Paulo. (Presencial ou híbrido NA Grande São Paulo é aceito.)
 - Stack principal totalmente alheia ao candidato (ex.: só Java, .NET, PHP, mobile nativo, SAP, front-end puro), sem back-end/IA relevante.
 - Senioridade incompatível: júnior/estágio, ou staff/principal/diretoria exigindo muito mais experiência que a do candidato.
 

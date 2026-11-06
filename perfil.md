@@ -58,7 +58,7 @@ Technologies: Node.js, AWS, ASR/NLU, REST APIs, CI/CD.
 
 - **Experiência como dev:** profissional desde jun/2022 (back-end), mais 1 ano de estágio (2021–2022). Antes disso, 4 anos em atendimento.
 - **Nível buscado:** pleno ou sênior. Não tenho interesse em vagas júnior/estágio nem staff/principal/diretoria.
-- **Modelo:** remoto (Brasil, América Latina ou empresas estrangeiras que contratam no Brasil) ou híbrido em São Paulo. Não aceito presencial nem híbrido fora da Grande São Paulo.
+- **Modelo:** remoto no Brasil; remoto para empresas dos EUA ou de Portugal, trabalhando a partir do Brasil; ou presencial, híbrido ou remoto em São Paulo. Não aceito presencial nem híbrido fora da Grande São Paulo.
 - **Contrato:** CLT, PJ ou contractor internacional.
 - **Pretensão mínima:** R$ 10.000/mês CLT ou R$ 13.000/mês PJ/contractor.
 - **Não tenho interesse:** BairesDev.

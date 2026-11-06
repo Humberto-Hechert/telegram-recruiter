@@ -152,3 +152,69 @@ test('fonte: primeira execução varre 24h, depois 1h', async () => {
   await collectJobs({ config, env: {}, store, notify: silent, linkedin, apify: {}, log: silent });
   assert.deepEqual(windows, [86400, 3600]);
 });
+
+// ---- Gravações no KV (plano grátis: 1.000 por dia)
+
+function countingKv() {
+  const kv = createMemoryKv();
+  const puts = [];
+  const put = kv.put.bind(kv);
+  kv.put = async (key, value, opts) => { puts.push(key); return put(key, value, opts); };
+  return { kv, puts };
+}
+
+test('KV: uma execução grava só o balde do dia + as enviadas + as "quase"', async () => {
+  const { kv, puts } = countingKv();
+  const { ctx } = setup({
+    A: { nota: 90 }, B: { nota: 65 }, C: { nota: 30 }, D: { nota: 20 }, E: { nota: 10, eliminada: true },
+  });
+  const now = () => new Date('2026-11-06T15:00:00Z');
+  ctx.store = createStore(kv, { ...config.storage, timeZone: 'America/Sao_Paulo' }, { now });
+  const jobs = ['A', 'B', 'C', 'D', 'E'].map((t, i) => job(String(i), t, `Empresa ${t}`));
+
+  await processJobs(jobs, ctx);
+  await ctx.store.flushSeen();
+
+  assert.deepEqual(puts.sort(), [
+    `quase:2026-11-05:${fingerprint('Empresa B', 'B')}`,
+    `vaga:${fingerprint('Empresa A', 'A')}`,
+    'vistas:2026-11-06',
+  ].sort());
+  assert.equal((await kv.get('vistas:2026-11-06')).length, 5);
+
+  // Próxima execução (store novo, como no GitHub Actions): nada é reavaliado.
+  const next = createStore(kv, { ...config.storage, timeZone: 'America/Sao_Paulo' }, { now });
+  const stats = await processJobs(jobs, { ...ctx, store: next });
+  assert.equal(stats.repetidas, 5);
+  assert.equal(stats.avaliadas, 0);
+});
+
+test('KV: registros antigos vaga:<fp> continuam contando como vistos', async () => {
+  const kv = createMemoryKv();
+  const store = createStore(kv, config.storage);
+  await kv.put(`vaga:${fingerprint('Acme', 'Antiga')}`, { status: 'baixa' });
+  assert.equal(await store.isSeen(fingerprint('Acme', 'Antiga')), true);
+  assert.equal(await store.isSeen(fingerprint('Acme', 'Nova')), false);
+});
+
+test('KV: baldes com mais de dedupDays dias são ignorados', async () => {
+  const kv = createMemoryKv();
+  const fp = fingerprint('Acme', 'Velha');
+  await kv.put('vistas:2026-10-01', [fp]);
+  const store = createStore(kv, { dedupDays: 30, timeZone: 'America/Sao_Paulo' }, { now: () => new Date('2026-11-06T15:00:00Z') });
+  assert.equal(await store.isSeen(fp), false);
+  await kv.put('vistas:2026-10-10', [fp]);
+  const store2 = createStore(kv, { dedupDays: 30, timeZone: 'America/Sao_Paulo' }, { now: () => new Date('2026-11-06T15:00:00Z') });
+  assert.equal(await store2.isSeen(fp), true);
+});
+
+test('KV: se gravar o registro da enviada falhar, ela não é reenviada', async () => {
+  const { store, sent, ctx } = setup({ A: { nota: 90 } });
+  store.saveJob = async () => { throw new Error('KV 429'); };
+  const first = await processJobs([job('1', 'A')], ctx);
+  assert.equal(first.erros, 1);
+  assert.equal(sent.length, 1);
+  const again = await processJobs([job('1', 'A')], ctx);
+  assert.equal(again.repetidas, 1);
+  assert.equal(sent.length, 1);
+});

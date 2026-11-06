@@ -61,7 +61,8 @@ async function main() {
     await alertError(store, telegram, config, err);
     process.exitCode = 1;
   } finally {
-    // Salva o gasto da OpenAI mesmo se a execução quebrar no meio.
+    // Salva as vagas vistas e o gasto da OpenAI mesmo se a execução quebrar no meio.
+    await store.flushSeen().catch((err) => log(`! não consegui salvar as vagas vistas: ${err.message}`));
     await budget.flush().catch((err) => log(`! não consegui salvar o gasto da OpenAI: ${err.message}`));
   }
 }

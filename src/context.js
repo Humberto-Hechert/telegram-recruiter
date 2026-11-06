@@ -12,7 +12,7 @@ export function buildContext(env, log = console.log) {
     : createMemoryKv();
   if (env.dryRun && hasCloudflare) kv = readOnly(kv, log);
   if (!hasCloudflare) log('Sem credenciais da Cloudflare: usando armazenamento em memória (nada fica salvo)');
-  const store = createStore(kv, config.storage);
+  const store = createStore(kv, { ...config.storage, timeZone: config.timezone });
   const telegram = createTelegram({ token: env.telegramToken, chatId: env.telegramChatId, dryRun: env.dryRun }, { log });
   return { config, store, telegram };
 }

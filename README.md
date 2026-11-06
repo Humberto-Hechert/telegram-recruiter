@@ -17,10 +17,10 @@ Robô que procura vagas novas no LinkedIn a cada 15 minutos, usa IA para medir o
 
 ## Como funciona, em uma frase por etapa
 
-1. **Busca:** 12 buscas (3 grupos de termos × remoto Brasil, LATAM, Worldwide e híbrido SP) com as vagas da última hora.
-2. **Pré-filtro:** descarta BairesDev, júnior, estágio, staff, vendas, "AI trainer"...
+1. **Busca:** 11 buscas (3 grupos de termos × remoto no Brasil, nos EUA e em Portugal, e São Paulo presencial/híbrido/remoto) com as vagas da última hora.
+2. **Pré-filtro:** descarta BairesDev, júnior, estágio, staff, outras stacks (Java, .NET, PHP, mobile, front-end), QA, DevOps, suporte, gestão, vendas...
 3. **Deduplicação:** empresa + título normalizado, lembrado por 30 dias. Repostagem não chega duas vezes.
-4. **IA:** eliminatórios (residência fora do Brasil, presencial, stack alheia) e nota ponderada (stack 40%, tipo de trabalho 25%, experiência 20%, outros 15%).
+4. **IA:** eliminatórios (residência fora do Brasil, presencial ou híbrido fora de SP, stack alheia) e nota ponderada (stack 40%, tipo de trabalho 25%, experiência 20%, outros 15%).
 5. **Piso salarial** (só quando a vaga informa): R$ 10k CLT, R$ 13k PJ, moeda estrangeira convertida e comparada com R$ 13k.
 6. **Telegram:** ≥ 70% chega na hora. 60–69% vai para o digest das 18h. O resto é descartado.
 7. **Fallback:** se o LinkedIn bloquear, o robô troca para o Apify a cada 2h, avisa e volta sozinho.

@@ -40,12 +40,17 @@ export function buildPublicSearchUrl(query, windowSeconds) {
   return `${PUBLIC_SEARCH}?${searchParams(query, windowSeconds)}`;
 }
 
-/** Todas as combinações grupo de termos × localização definidas no config. */
+/**
+ * Combinações grupo de termos × localização definidas no config.
+ * Uma localização pode limitar os grupos (`groups`, por label) e o número de páginas (`maxPages`).
+ */
 export function buildQueries(searchConfig) {
   const queries = [];
   for (const group of searchConfig.keywordGroups) {
     for (const loc of searchConfig.locations) {
+      if (loc.groups && !loc.groups.includes(group.label)) continue;
       queries.push({
+        maxPages: loc.maxPages,
         label: `${group.label} @ ${loc.label}`,
         keywords: group.keywords,
         location: loc.location,
@@ -146,7 +151,8 @@ export async function searchAll(searchConfig, windowSeconds, { fetchImpl = fetch
   const failures = [];
   let first = true;
   for (const query of queries) {
-    for (let page = 0; page < searchConfig.maxPagesPerQuery; page++) {
+    const maxPages = query.maxPages ?? searchConfig.maxPagesPerQuery;
+    for (let page = 0; page < maxPages; page++) {
       if (!first) await delay(searchConfig.requestDelayMs);
       first = false;
       let html;

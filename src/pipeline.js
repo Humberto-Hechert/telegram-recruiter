@@ -58,26 +58,30 @@ export async function processJobs(jobs, ctx) {
       if (status === 'enviada') {
         const salaryText = informed ? formatSalary(informed, false) : formatSalary(evaluation.salario_estimado, true);
         await telegram.sendMessage(formatJobMessage({ job, evaluation, score, salaryText }), { buttons: jobButtons(job, fp) });
-        Object.assign(record, {
+        // Enviada: marca como vista ANTES de gravar o registro, para nunca reenviar se a gravação falhar.
+        store.markSeen(fp);
+        stats.enviadas++;
+        await store.saveJob(fp, {
+          ...record,
           location: evaluation.local_resumo || job.location,
           idioma: evaluation.idioma_vaga || 'pt',
           description: truncate(job.description || '', 5000),
         });
-        stats.enviadas++;
       } else if (status === 'quase') {
         await store.saveNearMiss(today, fp, {
           title: job.title, company: job.company, url: job.url, score,
           local: evaluation.local_resumo || job.location,
           motivo: evaluation.ponto_de_atencao || evaluation.por_que_combina || '',
         });
+        store.markSeen(fp);
         stats.quase++;
       } else {
+        // Descartada: nenhuma gravação própria, só entra na lista de vistas do dia.
+        store.markSeen(fp);
         stats.descartadas++;
       }
 
-      // Marcar como vista só depois de enviar: se o Telegram falhar, a vaga é tentada de novo.
-      await store.saveJob(fp, record);
-      if (logJobs) log(`  ${String(score).padStart(3)}% [${status}] ${job.title} @ ${job.company}`);
+      if (logJobs) log(`  ${String(score).padStart(3)}% [${status}] ${job.title} @ ${job.company}${record.motivo ? ` — ${record.motivo}` : ''}`);
     } catch (err) {
       if (err instanceof BlockedError) {
         stats.bloqueio = err.message;

@@ -11,14 +11,14 @@
       },
       {
         "label": "pt-br",
-        "keywords": "Desenvolvedor OR \"Desenvolvedor backend\" OR \"Engenheiro de IA\" OR \"Desenvolvedor IA\""
+        "keywords": "\"Desenvolvedor backend\" OR \"Desenvolvedor back-end\" OR \"Desenvolvedor Node.js\" OR \"Desenvolvedor NodeJS\" OR \"Desenvolvedor IA\" OR \"Desenvolvedor de IA\" OR \"Engenheiro de IA\""
       }
     ],
     "locations": [
       { "label": "Brasil · remoto", "location": "Brazil", "geoId": "106057199", "workplaceTypes": ["2"] },
-      { "label": "América Latina · remoto", "location": "Latin America", "workplaceTypes": ["2"] },
-      { "label": "Worldwide · remoto", "location": "Worldwide", "geoId": "92000000", "workplaceTypes": ["2"] },
-      { "label": "São Paulo · híbrido", "location": "São Paulo, São Paulo, Brazil", "workplaceTypes": ["3"] }
+      { "label": "EUA · remoto", "location": "United States", "geoId": "103644278", "workplaceTypes": ["2"], "groups": ["engenharia (en)", "ia (en)"], "maxPages": 1 },
+      { "label": "Portugal · remoto", "location": "Portugal", "geoId": "100364837", "workplaceTypes": ["2"] },
+      { "label": "São Paulo · presencial/híbrido/remoto", "location": "São Paulo, São Paulo, Brazil", "workplaceTypes": ["1", "2", "3"] }
     ],
     "experienceLevels": ["3", "4"],
     "windowSeconds": 3600,
@@ -32,7 +32,19 @@
       "\\bj[uú]nior\\b", "\\bjr\\.?(\\b|$)", "est[aá]gi", "\\bintern(ship)?\\b", "\\btrainee\\b",
       "\\bstaff\\b", "\\bprincipal\\b", "\\bdirector\\b", "\\bdiretor", "\\bhead of\\b", "\\bvp\\b",
       "\\bsales\\b", "\\bvendas\\b", "account executive", "\\bsdr\\b", "\\bbdr\\b",
-      "annotat", "ai trainer", "data label", "\\btutor\\b", "\\bwriter\\b", "\\bprofessor\\b"
+      "annotat", "ai trainer", "data label", "\\btutor\\b", "\\bwriter\\b", "\\bprofessor\\b",
+      "\\baprendiz\\b", "entry[- ]level", "\\bgraduate\\b", "new grad", "\\binstrutor", "\\binstructor\\b",
+      "\\bfront[- ]?end\\b", "\\bmobile\\b", "\\bios\\b", "\\bandroid\\b", "\\bflutter\\b", "react native", "\\bswift\\b", "\\bkotlin\\b",
+      "\\bjava\\b", "\\.net\\b", "\\bc#", "\\bc\\+\\+", "\\bphp\\b", "\\bruby\\b", "\\bdelphi\\b", "\\bcobol\\b", "\\bmainframe\\b",
+      "\\babap\\b", "\\bsap\\b", "wordpress", "shopify", "magento", "\\bunity\\b", "\\bgames?\\b", "\\bjogos\\b",
+      "embedded", "embarcad", "firmware",
+      "\\bqa\\b", "\\bsdet\\b", "\\btester\\b", "test automation", "automa[cç][aã]o de testes", "\\bquality assurance\\b", "\\bqualidade\\b",
+      "\\bdevops\\b", "\\bsre\\b", "site reliability",
+      "\\bsuporte\\b", "\\bsupport\\b", "help ?desk", "service desk",
+      "\\bdesigner\\b", "\\bux\\b", "\\bui\\b",
+      "data scientist", "cientista de dados", "data analyst", "analista de dados", "\\bbi\\b", "business intelligence",
+      "\\bmanager\\b", "\\bgerente\\b", "\\bcoordenador", "product owner", "scrum master", "agile coach",
+      "recruit", "recrutador", "talent acquisition", "marketing", "customer success", "atendimento"
     ]
   },
   "scoring": {

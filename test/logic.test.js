@@ -27,6 +27,25 @@ test('pré-filtro tira BairesDev e títulos fora do nível', () => {
   assert.equal(prefilter({ company: 'Acme', title: 'Engenheiro de IA Pleno' }).ok, true);
 });
 
+test('pré-filtro ampliado: tira outras stacks e funções, mantém as vagas-alvo', () => {
+  const prefilter = createPrefilter(config.filters);
+  const blocked = [
+    'Senior Java Developer', 'Desenvolvedor .NET Pleno', 'C# Backend Engineer', 'Desenvolvedor PHP', 'Ruby on Rails Engineer',
+    'Senior Frontend Engineer', 'Desenvolvedor Front-end', 'iOS Engineer', 'Android Developer', 'Mobile Engineer (React Native)',
+    'QA Engineer', 'Analista de Qualidade', 'DevOps Engineer', 'SRE - Site Reliability Engineer', 'Analista de Suporte',
+    'UX Designer', 'Data Scientist', 'Analista de Dados', 'Engineering Manager', 'Product Owner', 'Gerente de Projetos',
+    'Technical Recruiter', 'Desenvolvedor SAP ABAP', 'Game Developer (Unity)', 'Embedded Software Engineer', 'Entry Level Software Engineer',
+  ];
+  for (const title of blocked) assert.equal(prefilter({ company: 'Acme', title }).ok, false, `deveria bloquear: ${title}`);
+
+  const allowed = [
+    'Senior Backend Engineer (Node.js)', 'Desenvolvedor Backend Pleno', 'Desenvolvedor Node.js Sênior', 'Analista Desenvolvedor Backend',
+    'Software Engineer - JavaScript/TypeScript', 'Full Stack Engineer (Node/React)', 'LLM Engineer', 'Desenvolvedor de IA',
+    'AI Engineer - Agents', 'Tech Lead Backend', 'Engenheiro de Software Sênior',
+  ];
+  for (const title of allowed) assert.equal(prefilter({ company: 'Acme', title }).ok, true, `deveria passar: ${title}`);
+});
+
 test('nota ponderada segue a régua 40/25/20/15', () => {
   const evaluation = { eliminada: false, notas: { stack: 90, tipo_trabalho: 80, experiencia: 60, outros: 50 } };
   // 90*.4 + 80*.25 + 60*.2 + 50*.15 = 36 + 20 + 12 + 7.5 = 75.5
