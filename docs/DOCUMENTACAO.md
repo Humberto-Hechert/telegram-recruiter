@@ -11,6 +11,7 @@ A cada 15 min o robô busca vagas novas no LinkedIn, pede para uma IA comparar c
 | **LinkedIn (endpoint guest)** | Fonte das vagas, sem login. Não é API oficial. |
 | **Apify** | Fonte reserva quando o LinkedIn bloqueia. Usa os ~US$ 5 grátis por mês. |
 | **Gemini Flash-Lite / Groq** | IA que dá as notas, o resumo e o salário, e escreve a carta. O Groq só entra se o Gemini falhar. |
+| **OpenAI GPT-5 Nano (opcional)** | Último recurso, só usado se o Gemini e o Groq falharem. É pago, com teto de **US$ 2/mês** controlado pelo robô. |
 | **Cloudflare Workers KV** | Memória do robô: vagas já vistas, vagas do digest e modo atual. |
 | **Cloudflare Worker** | Recebe o clique no botão "Gerar carta" e os comandos `/start` e `/status`. |
 | **Telegram** | Onde chegam as vagas, o digest e os alertas. |
@@ -45,15 +46,15 @@ flowchart TD
 
 ## 3. Configuração (~40 min, nesta ordem)
 
-1. **GitHub:** crie o repositório **público** `telegram-recruiter` e suba o projeto na branch `main`.
+1. **GitHub:** crie o repositório **público** `robo-vagas` e suba o projeto na branch `main`.
 2. **Telegram:** fale com o @BotFather e use `/newbot` para pegar o **token**. Mande "oi" para o seu bot e abra `https://api.telegram.org/bot<TOKEN>/getUpdates` para achar o **chat ID** (`"chat":{"id":...}`).
 3. **IA:** crie uma chave em [aistudio.google.com](https://aistudio.google.com) (Gemini) e outra em [console.groq.com](https://console.groq.com) (Groq).
-4. **Cloudflare:** crie a conta. Em *Workers KV*, crie o namespace `telegram-recruiter` e copie o **ID**. Copie também o **Account ID**. Em *My Profile → API Tokens*, crie um token com a permissão **Account · Workers KV Storage · Edit**.
+4. **Cloudflare:** crie a conta. Em *Workers KV*, crie o namespace `robo-vagas` e copie o **ID**. Copie também o **Account ID**. Em *My Profile → API Tokens*, crie um token com a permissão **Account · Workers KV Storage · Edit**.
 5. **Worker:** no `worker/wrangler.toml`, preencha o ID do KV, o `ALLOWED_CHAT_ID` (seu chat ID) e o `PROFILE_URL` (link raw do `perfil.md`). Depois rode:
    ```bash
    cd worker && npx wrangler login && npx wrangler deploy
    npx wrangler secret put TELEGRAM_BOT_TOKEN
-   npx wrangler secret put TELEGRAM_WEBHOOK_SECRET   
+   npx wrangler secret put TELEGRAM_WEBHOOK_SECRET   # qualquer texto aleatório
    npx wrangler secret put GEMINI_API_KEY
    npx wrangler secret put GROQ_API_KEY
    curl "https://api.telegram.org/bot<TOKEN>/setWebhook" -d "url=<URL do Worker>" \
@@ -61,14 +62,15 @@ flowchart TD
    ```
    Para conferir, mande `/start` ao bot. A resposta deve ser "Robô de vagas ativo ✅".
 6. **Apify (opcional):** crie a conta e copie o token em *Settings → API & Integrations*.
-7. **Secrets do GitHub** (*Settings → Secrets and variables → Actions*): `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`, `CF_ACCOUNT_ID`, `CF_KV_NAMESPACE_ID`, `CF_API_TOKEN`, `GEMINI_API_KEY`, `GROQ_API_KEY`, `APIFY_TOKEN`. Três variáveis são opcionais: `GEMINI_MODEL`, `GROQ_MODEL` e `LOG_JOBS=1` (mostra as notas no log, que é público).
+   **OpenAI (opcional):** crie uma chave em [platform.openai.com](https://platform.openai.com/api-keys) e coloque US$ 5 de crédito pré-pago, **com recarga automática desligada**. Coloque a chave no Worker (`npx wrangler secret put OPENAI_API_KEY`) e no GitHub (Secret `OPENAI_API_KEY`).
+7. **Secrets do GitHub** (*Settings → Secrets and variables → Actions*): `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`, `CF_ACCOUNT_ID`, `CF_KV_NAMESPACE_ID`, `CF_API_TOKEN`, `GEMINI_API_KEY`, `GROQ_API_KEY`, `APIFY_TOKEN` e, se quiser o fallback pago, `OPENAI_API_KEY`. Variáveis opcionais: `GEMINI_MODEL`, `GROQ_MODEL`, `OPENAI_MODEL` e `LOG_JOBS=1` (mostra as notas no log, que é público).
 8. **Teste:** em *Actions → Buscar vagas → Run workflow*, confira a linha `Resumo:` no log.
 9. **cron-job.org:**
-   - Crie um token *fine-grained* no GitHub, só para o `telegram-recruiter`, com a permissão **Actions: Read and write**.
+   - Crie um token *fine-grained* no GitHub, só para o `robo-vagas`, com a permissão **Actions: Read and write**.
    - Crie dois jobs, com o fuso America/Sao_Paulo:
-     - **Busca:** `POST https://api.github.com/repos/<usuario>/telegram-recruiter/actions/workflows/scan.yml/dispatches`, a cada 15 min.
+     - **Busca:** `POST https://api.github.com/repos/<usuario>/robo-vagas/actions/workflows/scan.yml/dispatches`, a cada 15 min.
      - **Digest:** a mesma URL com `digest.yml`, todo dia às 18:00.
-   - Nos dois, use os headers `Authorization: Bearer <token>`, `Accept: application/vnd.github+json` e `User-Agent: telegram-recruiter-cron`, e o body `{"ref":"main"}`.
+   - Nos dois, use os headers `Authorization: Bearer <token>`, `Accept: application/vnd.github+json` e `User-Agent: robo-vagas-cron`, e o body `{"ref":"main"}`.
    - O teste no cron-job.org deve devolver **204**.
 
 **Teste local:** `npm test` roda os testes sem rede. `DRY_RUN=1 LOG_JOBS=1 npm run scan` faz a busca real, mas mostra as mensagens no terminal em vez de mandar ao Telegram e não grava nada no KV.
@@ -85,6 +87,7 @@ Quase tudo fica em `config/config.json`:
 | Pesos da nota | `scoring.weights` |
 | Pisos salariais | `salary.floorsBRLMonthly` |
 | Vagas avaliadas por execução | `llm.maxEvaluationsPerRun` (20) |
+| Teto da OpenAI | `openai.monthlyBudgetUSD` (2) no `config.json` **e** `OPENAI_MONTHLY_BUDGET_USD` no `wrangler.toml`, com o mesmo valor. O gasto do mês aparece no `/status` do bot. |
 | Frequência | Schedule no cron-job.org. Se passar de 1h, aumente `search.windowSeconds`. |
 | Seu currículo e preferências | `perfil.md` |
 | Critérios da IA | Prompt em `src/scoring.js` |
@@ -106,7 +109,10 @@ Quase tudo fica em `config/config.json`:
 | Apify HTTP 400 ou vagas sem título | Actor mudou o formato | Ajuste `searchApify` e `mapApifyItem` em `src/apify.js`. |
 | Sempre 0 vagas, sem bloqueio | HTML do LinkedIn mudou | Baixe a busca com `curl` e ajuste os regex de `parseSearchResults` em `src/linkedin.js`. |
 | `Gemini 429` | Cota esgotada | O Groq assume. Se os dois esgotarem, as vagas ficam para depois. |
+| `Gemini 503 (high demand)` | Modelo sobrecarregado no Google | O robô tenta de novo 2x (8 s e 20 s). Se for frequente, use uma lista em `GEMINI_MODEL`, por exemplo `gemini-3.5-flash-lite,gemini-3.5-flash`. |
 | `Gemini 404` ou `Groq 404` | Modelo descontinuado | Defina `GEMINI_MODEL` ou `GROQ_MODEL` com um modelo atual, no GitHub e no `wrangler.toml`. |
+| 💸 "Teto da OpenAI atingido" | Gastou os US$ 2 do mês | A OpenAI fica desligada até o mês virar; o Gemini e o Groq seguem funcionando. Se acontecer todo mês, o Gemini está falhando demais: veja os erros dele no log. |
+| `OpenAI HTTP 400` | Modelo não aceita `reasoning_effort` | Troque `openai.reasoningEffort` no `config.json` para `"low"` ou `""`. |
 | Notas altas ou baixas demais | Régua | Use o digest para calibrar e ajuste `sendThreshold`, os pesos ou o `perfil.md`. |
 | Vaga repetida | Título repostado diferente | Acrescente palavras em `TITLE_NOISE` (`src/util.js`). |
 | Botão não responde | Webhook | Rode `getWebhookInfo`. 401 → o segredo é diferente nos dois lados. Use `npx wrangler tail` para ver os logs. |

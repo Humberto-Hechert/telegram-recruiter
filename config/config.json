@@ -51,6 +51,13 @@
     "groqMinIntervalMs": 20000,
     "maxDescriptionChars": 6000
   },
+  "openai": {
+    "model": "gpt-5-nano",
+    "monthlyBudgetUSD": 2,
+    "pricePerMillion": { "input": 0.05, "cachedInput": 0.005, "output": 0.40 },
+    "maxCompletionTokens": 2000,
+    "reasoningEffort": "minimal"
+  },
   "storage": {
     "dedupDays": 30
   },

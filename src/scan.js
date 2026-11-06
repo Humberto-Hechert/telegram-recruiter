@@ -2,6 +2,7 @@
 import { loadEnv, loadProfile } from './config.js';
 import { buildContext } from './context.js';
 import { createLlm } from './llm.js';
+import { createBudget } from './budget.js';
 import { createPrefilter } from './filters.js';
 import { fetchRatesToBRL } from './salary.js';
 import { collectJobs, switchToApify } from './source.js';
@@ -28,6 +29,7 @@ async function main() {
   const env = loadEnv();
   const { config, store, telegram } = buildContext(env, log);
   const notify = (text) => telegram.sendMessage(text);
+  const budget = createBudget({ store, openaiConfig: config.openai, timeZone: config.timezone, notify, log });
 
   try {
     const { jobs, source, firstRun } = await collectJobs({ config, env, store, notify, linkedin, apify, log });
@@ -39,7 +41,7 @@ async function main() {
       profile: loadProfile(),
       store,
       prefilter: createPrefilter(config.filters),
-      complete: createLlm(env, config.llm, { log }),
+      complete: createLlm(env, config.llm, { log, budget, openaiConfig: config.openai }),
       telegram,
       fetchDetail: (id) => linkedin.fetchDetail(id),
       getRates: async () => (rates ??= await fetchRatesToBRL(config.salary.fallbackRatesToBRL, { log })),
@@ -53,10 +55,14 @@ async function main() {
     if (firstRun) await store.setState('initialized', new Date().toISOString());
 
     log(`Resumo: ${JSON.stringify(stats)} · ${Math.round((Date.now() - startedAt) / 1000)}s`);
+    if (budget.calls) log(`OpenAI em ${budget.month}: US$ ${budget.spentUSD.toFixed(4)} de US$ ${config.openai.monthlyBudgetUSD.toFixed(2)} (${budget.calls} chamadas)`);
   } catch (err) {
     console.error(err);
     await alertError(store, telegram, config, err);
     process.exitCode = 1;
+  } finally {
+    // Salva o gasto da OpenAI mesmo se a execução quebrar no meio.
+    await budget.flush().catch((err) => log(`! não consegui salvar o gasto da OpenAI: ${err.message}`));
   }
 }
 

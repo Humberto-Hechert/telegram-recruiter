@@ -30,6 +30,8 @@ export function loadEnv(env = process.env) {
     geminiModel: env.GEMINI_MODEL || 'gemini-3.5-flash-lite',
     groqKey: env.GROQ_API_KEY,
     groqModel: env.GROQ_MODEL || 'openai/gpt-oss-120b',
+    openaiKey: env.OPENAI_API_KEY,
+    openaiModel: env.OPENAI_MODEL || '',
     apifyToken: env.APIFY_TOKEN,
   };
 
@@ -42,7 +44,7 @@ export function loadEnv(env = process.env) {
       CF_API_TOKEN: values.cfApiToken,
     };
     const missing = Object.entries(required).filter(([, v]) => !v).map(([k]) => k);
-    if (!values.geminiKey && !values.groqKey) missing.push('GEMINI_API_KEY ou GROQ_API_KEY');
+    if (!values.geminiKey && !values.groqKey && !values.openaiKey) missing.push('GEMINI_API_KEY, GROQ_API_KEY ou OPENAI_API_KEY');
     if (missing.length) throw new Error(`Variáveis de ambiente faltando: ${missing.join(', ')}`);
   }
   return values;
