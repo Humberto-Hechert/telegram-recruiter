@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { parseSearchResults, parseJobDetail, buildGuestSearchUrl, buildQueries, searchAll, BlockedError } from '../src/linkedin.js';
+import { parseSearchResults, parseJobDetail, buildGuestSearchUrl, buildPublicSearchUrl, buildQueries, searchAll, BlockedError } from '../src/linkedin.js';
 import { mapApifyItem } from '../src/apify.js';
 import { loadConfig } from '../src/config.js';
 
@@ -39,6 +39,16 @@ test('monta a URL da busca guest com os filtros', () => {
   assert.equal(url.searchParams.get('f_E'), '3,4');
   assert.equal(url.searchParams.get('start'), '10');
   assert.equal(url.searchParams.get('keywords'), '"AI Engineer"');
+  assert.equal(url.searchParams.get('f_AL'), null);
+});
+
+test('filtra só candidatura simplificada (Easy Apply) quando easyApplyOnly está ligado', () => {
+  const queries = buildQueries(loadConfig().search);
+  assert.ok(queries.every((q) => q.easyApplyOnly === true));
+  const guest = new URL(buildGuestSearchUrl(queries[0], 3600, 0));
+  assert.equal(guest.searchParams.get('f_AL'), 'true');
+  const pub = new URL(buildPublicSearchUrl(queries[0], 3600));
+  assert.equal(pub.searchParams.get('f_AL'), 'true');
 });
 
 test('o config gera 11 buscas: EUA só com os termos em inglês e 1 página', () => {

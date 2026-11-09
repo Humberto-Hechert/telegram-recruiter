@@ -21,9 +21,10 @@ export class BlockedError extends Error {
   }
 }
 
-function searchParams({ keywords, location, geoId, workplaceTypes = [], experienceLevels = [] }, windowSeconds) {
+function searchParams({ keywords, location, geoId, workplaceTypes = [], experienceLevels = [], easyApplyOnly = false }, windowSeconds) {
   const params = new URLSearchParams({ keywords, location, f_TPR: `r${windowSeconds}`, sortBy: 'DD' });
   if (geoId) params.set('geoId', geoId);
+  if (easyApplyOnly) params.set('f_AL', 'true'); // "Candidatura simplificada" (Easy Apply)
   if (workplaceTypes.length) params.set('f_WT', workplaceTypes.join(','));
   if (experienceLevels.length) params.set('f_E', experienceLevels.join(','));
   return params;
@@ -57,6 +58,7 @@ export function buildQueries(searchConfig) {
         geoId: loc.geoId,
         workplaceTypes: loc.workplaceTypes,
         experienceLevels: searchConfig.experienceLevels,
+        easyApplyOnly: searchConfig.easyApplyOnly,
       });
     }
   }

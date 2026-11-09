@@ -21,6 +21,7 @@
       { "label": "São Paulo · presencial/híbrido/remoto", "location": "São Paulo, São Paulo, Brazil", "workplaceTypes": ["1", "2", "3"] }
     ],
     "experienceLevels": ["3", "4"],
+    "easyApplyOnly": true,
     "windowSeconds": 3600,
     "firstRunWindowSeconds": 86400,
     "maxPagesPerQuery": 3,
