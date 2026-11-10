@@ -5,7 +5,7 @@ import { createLlm } from './llm.js';
 import { createBudget } from './budget.js';
 import { createPrefilter } from './filters.js';
 import { fetchRatesToBRL } from './salary.js';
-import { collectJobs, switchToApify } from './source.js';
+import { collectJobs, switchToApify, confirmGuest } from './source.js';
 import { processJobs } from './pipeline.js';
 import * as linkedin from './linkedin.js';
 import * as apify from './apify.js';
@@ -32,7 +32,7 @@ async function main() {
   const budget = createBudget({ store, openaiConfig: config.openai, timeZone: config.timezone, notify, log });
 
   try {
-    const { jobs, source, firstRun } = await collectJobs({ config, env, store, notify, linkedin, apify, log });
+    const { jobs, source, firstRun, mode } = await collectJobs({ config, env, store, notify, linkedin, apify, log });
     log(`Fonte: ${source}${firstRun ? ' (primeira execução: últimas 24h)' : ''} · ${jobs.length} vagas encontradas`);
 
     let rates;
@@ -51,7 +51,10 @@ async function main() {
     });
 
     // Bloqueio ao buscar detalhes (a busca em si passou). Se veio de 'guest-parcial', a troca já foi feita.
-    if (stats.bloqueio && source === 'guest') await switchToApify(store, notify, stats.bloqueio, Date.now());
+    if (source === 'guest') {
+      if (stats.bloqueio) await switchToApify(store, notify, stats.bloqueio, Date.now(), { prev: mode, apifyConfig: config.apify });
+      else await confirmGuest(store, notify, mode, Date.now());
+    }
     if (firstRun) await store.setState('initialized', new Date().toISOString());
 
     log(`Resumo: ${JSON.stringify(stats)} · ${Math.round((Date.now() - startedAt) / 1000)}s`);

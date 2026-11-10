@@ -5,7 +5,7 @@ import { createMemoryKv } from '../src/kv.js';
 import { createStore } from '../src/store.js';
 import { createPrefilter } from '../src/filters.js';
 import { processJobs } from '../src/pipeline.js';
-import { collectJobs } from '../src/source.js';
+import { collectJobs, confirmGuest } from '../src/source.js';
 import { BlockedError } from '../src/linkedin.js';
 import { fingerprint } from '../src/util.js';
 
@@ -134,12 +134,44 @@ test('fonte: bloqueio troca para Apify e avisa; probe ok volta para guest', asyn
   assert.equal(r.source, 'apify-aguardando');
   assert.equal(r.jobs.length, 0);
 
-  // 3) LinkedIn volta → probe ok, volta para guest e avisa
+  // 3) LinkedIn volta, mas antes de 1h nem testa
   blocked = false;
   r = await collectJobs({ config, env, store, notify, linkedin, apify, now: t0 + 30 * 60000, log: silent });
+  assert.equal(r.source, 'apify-aguardando');
+
+  // 4) Depois de 1h: probe ok, busca completa ok; o aviso sai só na confirmação
+  r = await collectJobs({ config, env, store, notify, linkedin, apify, now: t0 + 61 * 60000, log: silent });
   assert.equal(r.source, 'guest');
+  assert.equal(notes.length, 1);
+  await confirmGuest(store, notify, r.mode, t0 + 61 * 60000);
   assert.match(notes[1], /voltou/);
   assert.equal(notes.length, 2);
+});
+
+test('fonte: probe passa mas a busca leva 429 → não alterna avisos, espera dobra', async () => {
+  const store = createStore(createMemoryKv(), config.storage);
+  const notes = [];
+  const notify = async (t) => notes.push(t);
+  let searches = 0;
+  const linkedin = {
+    searchAll: async () => { searches++; throw new BlockedError('LinkedIn respondeu HTTP 429', []); },
+    probe: async () => true,
+  };
+  const apify = { searchApify: async () => [] };
+  const env = { apifyToken: 'x' };
+  const t0 = Date.parse('2026-11-05T12:00:00Z');
+  const min = 60000;
+
+  for (let t = 0; t <= 8 * 60; t += 15) {
+    await collectJobs({ config, env, store, notify, linkedin, apify, now: t0 + t * min, log: silent });
+  }
+  // Só o primeiro aviso de bloqueio, nenhum "voltou".
+  assert.equal(notes.length, 1);
+  assert.match(notes[0], /bloqueou/);
+  // Tentativas da busca: t=0, ~1h, ~3h, ~7h (espera 60 → 120 → 240 min).
+  assert.equal(searches, 4);
+  const mode = await store.getState('mode');
+  assert.equal(mode.failures, 4);
 });
 
 test('fonte: primeira execução varre 24h, depois 1h', async () => {

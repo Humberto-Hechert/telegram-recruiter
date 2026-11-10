@@ -24,7 +24,7 @@
     "easyApplyOnly": true,
     "windowSeconds": 3600,
     "firstRunWindowSeconds": 86400,
-    "maxPagesPerQuery": 3,
+    "maxPagesPerQuery": 2,
     "requestDelayMs": [2000, 4500]
   },
   "filters": {
@@ -77,6 +77,8 @@
   "apify": {
     "actorId": "curious_coder~linkedin-jobs-scraper",
     "intervalMinutes": 120,
+    "guestRetryMinutes": 60,
+    "guestRetryMaxMinutes": 720,
     "windowSeconds": 10800,
     "maxPerSearch": 25
   },

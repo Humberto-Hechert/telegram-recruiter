@@ -94,7 +94,7 @@ flowchart TD
   A nota final é calculada **em código**, com pesos fixos, para a régua ser sempre a mesma.
 - **Piso salarial:** só vale quando a vaga informa o salário. Os pisos são R$ 10k CLT e R$ 13k PJ ou moeda estrangeira (convertida pelo câmbio do dia). Sem salário informado, a IA estima, a mensagem marca "(estimativa IA)" e a vaga nunca é descartada pela estimativa.
 - **Resiliência da IA:** em erros passageiros (503 ou 429), o robô tenta o mesmo modelo de novo depois de 8 s e de 20 s. Se continuar falhando, passa para o próximo provedor: Gemini → Groq → OpenAI. A OpenAI só é chamada se o pior caso da chamada couber no teto do mês.
-- **Bloqueio do LinkedIn:** o robô troca sozinho para o Apify e avisa com "⚠️". Quando o LinkedIn volta, ele retoma a busca direta e avisa com "✅".
+- **Bloqueio do LinkedIn:** o robô troca sozinho para o Apify e avisa com "⚠️". Ele só testa o LinkedIn de novo depois de 1h, e a espera dobra a cada tentativa frustrada (até 12h, ajustável em `apify.guestRetryMinutes` e `apify.guestRetryMaxMinutes`). O aviso "✅" só sai quando uma busca completa passa sem bloqueio. Tentativas frustradas não geram novo aviso.
 - **Botão "Gerar carta":** o Telegram avisa o Worker, que lê a vaga no KV e o `perfil.md` no GitHub, gera a carta no idioma da vaga e responde. Clicar de novo devolve a mesma carta, sem gastar IA.
 - **Alertas:** quando a execução quebra, chega "🔴 Robô de vagas falhou", no máximo uma vez a cada 6h.
 - **Garantia:** uma vaga só é marcada como vista depois que a mensagem é enviada. Se o Telegram falhar, ela é tentada de novo.
@@ -463,7 +463,7 @@ O LinkedIn não tem API pública de vagas. Usei o endpoint "guest", o mesmo que 
 
 Para não multiplicar as requisições, juntei os termos com `OR` em 3 grupos e cruzei com 4 recortes de localização: 11 buscas por execução (cada recorte pode limitar quais grupos usa e quantas páginas lê). Cada busca pega a última hora. Com execuções a cada 15 min, cada vaga aparece em até 4 execuções, então uma falha isolada não perde nada.
 
-O robô detecta bloqueio pelos códigos de resposta do LinkedIn (429, 999 e redirecionamento para login) e troca para o Apify, um scraper pago com proxies próprios. Para economizar os créditos grátis, o Apify roda só a cada 2h. Em toda execução, o robô faz uma requisição de teste ao LinkedIn e volta para ele assim que é liberado.
+O robô detecta bloqueio pelos códigos de resposta do LinkedIn (429, 999 e redirecionamento para login) e troca para o Apify, um scraper pago com proxies próprios. Para economizar os créditos grátis, o Apify roda só a cada 2h. Depois de um bloqueio, o robô espera 1h (dobrando a cada nova falha, até 12h) antes de testar o LinkedIn de novo, e só avisa que voltou quando a busca completa passa. Antes disso, uma única requisição de teste passava, a busca inteira levava 429 de novo, e o Telegram recebia "bloqueou" e "voltou" a cada 15 min.
 
 ### Etapa 4 — Filtrar antes de gastar
 
