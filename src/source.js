@@ -85,7 +85,26 @@ export async function collectJobs({ config, env, store, notify, now = Date.now()
     return { jobs: [], source: 'apify-aguardando', firstRun };
   }
   const apifyWindow = Math.max(windowSeconds, config.apify.windowSeconds);
-  const jobs = await apify.searchApify(config.search, config.apify, env.apifyToken, apifyWindow);
-  await store.setState('mode', { ...mode, lastApifyRun: now });
+  let jobs;
+  try {
+    jobs = await apify.searchApify(config.search, config.apify, env.apifyToken, apifyWindow);
+  } catch (err) {
+    // Falha do Apify (cota do plano free esgotada, fora do ar...) não pode derrubar a execução:
+    // registra a tentativa para só tentar de novo após `intervalMinutes` e segue sem vagas.
+    const quota = /HTTP 40[23]|platform-feature-disabled|usage/i.test(err.message);
+    const next = { ...mode, lastApifyRun: now };
+    if (quota) {
+      // Sem Apify, a única fonte é o LinkedIn: testa já na próxima execução em vez de esperar o backoff.
+      next.retryAt = Math.min(mode.retryAt || now, now);
+      if (!mode.apifyQuotaWarned) {
+        next.apifyQuotaWarned = true;
+        await notify('⚠️ A cota mensal do Apify acabou. Vou continuar tentando o LinkedIn direto até a cota renovar.');
+      }
+    }
+    await store.setState('mode', next);
+    log(`Apify falhou: ${err.message.slice(0, 200)}`);
+    return { jobs: [], source: 'apify-erro', firstRun };
+  }
+  await store.setState('mode', { ...mode, lastApifyRun: now, apifyQuotaWarned: false });
   return { jobs, source: 'apify', firstRun };
 }
